@@ -1,0 +1,47 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate the OpenAPI spec from the app
+        run: |
+          pip install -e .
+          python - <<'PY'
+          import json
+          from jobpilot.api import create_app
+          spec = create_app("spec.db").openapi()
+          with open("docs/openapi.json", "w") as fh:
+              json.dump(spec, fh, indent=2)
+          PY
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true  # turns Pages on for the repo on first run
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

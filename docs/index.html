@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jobpilot: track job applications from raw text</title>
+<meta name="description" content="Turn a messy job posting into a tracked application. Offline parser, optional LLM extractor, SQLite store, REST API.">
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --dim: #484f58;
+    --green: #39d353;
+    --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    line-height: 1.6;
+  }
+  a { color: var(--green); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  .window {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg);
+    margin-bottom: 28px;
+  }
+  .bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    font-size: 12px; color: var(--muted);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f56; } .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
+  .bar span.title { margin-left: 8px; }
+  .body { padding: 20px; }
+
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.3px; }
+  h2 { font-size: 15px; color: var(--green); margin: 0 0 14px; font-weight: 600; }
+  p { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
+  .lede { font-size: 15px; color: var(--fg); }
+
+  pre {
+    background: #11161d;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    margin: 0 0 14px;
+  }
+  code { color: var(--fg); }
+  .prompt { color: var(--green); }
+  .comment { color: var(--dim); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .card {
+    background: #11161d;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 12px; color: var(--muted); font-weight: 500; }
+  .card p { margin: 0; font-size: 13px; }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .chip {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .chip:hover { border-color: var(--green); color: var(--green); text-decoration: none; }
+  .swagger-ui { font-family: var(--mono); }
+  .swagger-ui .info .title, .swagger-ui .info p, .swagger-ui .info li { color: var(--fg); }
+  .swagger-ui .scheme-container { background: transparent; box-shadow: none; padding: 0 0 16px; }
+  .swagger-ui .opblock { background: #11161d; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="window">
+    <div class="bar">
+      <i class="dot r"></i><i class="dot y"></i><i class="dot g"></i>
+      <span class="title">abubakar@github: ~ $ cat README.md</span>
+    </div>
+    <div class="body">
+      <h1>jobpilot</h1>
+      <p class="lede">Turn a messy job posting into a tracked application, in one command.</p>
+      <p>Most job hunts die in a spreadsheet nobody updates. jobpilot takes the raw text of a
+      posting (an email, a forward, a scraped page) and turns it into a structured record:
+      company, role, salary band, deadline, stack, contact. It runs entirely offline by
+      default and calls an LLM only when you ask it to.</p>
+
+      <div class="links">
+        <a class="chip" href="https://github.com/MuhammadAbuBakar69/jobpilot">source</a>
+        <a class="chip" href="https://github.com/MuhammadAbuBakar69/jobpilot/issues">issues</a>
+        <a class="chip" href="https://github.com/MuhammadAbuBakar69/jobpilot/pkgs/container/jobpilot">container</a>
+        <a class="chip" href="./openapi.json">openapi.json</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="window">
+    <div class="bar">
+      <i class="dot r"></i><i class="dot y"></i><i class="dot g"></i>
+      <span class="title">abubakar@github: ~ $ ./quickstart.sh</span>
+    </div>
+    <div class="body">
+      <pre><span class="prompt">$</span> pip install -e ".[dev]"
+<span class="prompt">$</span> jobpilot add posting.txt
+added #1: Senior Full-Stack Engineer @ Northwind Labs
+  deadline: 2026-12-15
+  skills:   react, typescript, node.js, mongodb, postgres, docker
+
+<span class="prompt">$</span> jobpilot stats
+total applications : 12
+  applied      7
+  interview    2
+  rejected     2
+  offer        1
+response rate      : 41.7%
+next deadline      : 2026-12-15 - Senior Full-Stack Engineer @ Northwind Labs
+
+<span class="comment"># or run the API in a container</span>
+<span class="prompt">$</span> docker run -p 8000:8000 ghcr.io/muhammadabubakar69/jobpilot</pre>
+      <div class="grid">
+        <div class="card">
+          <h3>offline first</h3>
+          <p>Heuristic extraction with no key, no network, no surprises.</p>
+        </div>
+        <div class="card">
+          <h3>llm optional</h3>
+          <p>FastRouter or any OpenAI-compatible endpoint, validated and merged.</p>
+        </div>
+        <div class="card">
+          <h3>deduped store</h3>
+          <p>One SQLite file, keyed by fingerprint, so re-imports are no-ops.</p>
+        </div>
+        <div class="card">
+          <h3>tested</h3>
+          <p>24 tests, ruff, CI on Python 3.10, 3.11 and 3.12.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window">
+    <div class="bar">
+      <i class="dot r"></i><i class="dot y"></i><i class="dot g"></i>
+      <span class="title">abubakar@github: ~ $ ./api-docs.sh</span>
+    </div>
+    <div class="body">
+      <h2>API reference</h2>
+      <div id="swagger"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+<script>
+  window.ui = SwaggerUIBundle({
+    url: "./openapi.json",
+    dom_id: "#swagger",
+    deepLinking: true,
+    docExpansion: "list",
+    defaultModelsExpandDepth: -1,
+    tryItOutEnabled: false
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      JOBPILOT_DB: /data/jobpilot.db
+      # FASTROUTER_API_KEY: ${FASTROUTER_API_KEY:-}
+    volumes:
+      - jobpilot-data:/data
+
+volumes:
+  jobpilot-data:

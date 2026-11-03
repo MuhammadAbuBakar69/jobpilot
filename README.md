@@ -5,8 +5,13 @@
 **Turn a messy job posting into a tracked application, in one command.**
 
 [![CI](https://github.com/MuhammadAbuBakar69/jobpilot/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadAbuBakar69/jobpilot/actions/workflows/ci.yml)
+[![Docs](https://github.com/MuhammadAbuBakar69/jobpilot/actions/workflows/pages.yml/badge.svg)](https://github.com/MuhammadAbuBakar69/jobpilot/actions/workflows/pages.yml)
+[![Container](https://github.com/MuhammadAbuBakar69/jobpilot/actions/workflows/container.yml/badge.svg)](https://github.com/MuhammadAbuBakar69/jobpilot/pkgs/container/jobpilot)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-3DA639)
+
+**Live docs**: <https://muhammadabubakar69.github.io/jobpilot/>
+**Container**: `ghcr.io/muhammadabubakar69/jobpilot`
 
 </div>
 
@@ -66,6 +71,24 @@ Two decisions worth calling out:
   a hallucinated field falls back to what the regexes actually found.
 - **Deduplication is by fingerprint.** Re-importing the same posting is a no-op
   instead of a duplicate row.
+
+## Run it
+
+Three ways, pick one:
+
+```bash
+# 1. from source
+pip install -e ".[dev]" && jobpilot --help
+
+# 2. the published container (API on :8000)
+docker run --rm -p 8000:8000 ghcr.io/muhammadabubakar69/jobpilot
+
+# 3. compose, with a named volume for the database
+docker compose up --build
+```
+
+The container serves the REST API; `docker/build` is reproducible because the image
+pins Python 3.12 and installs the package from `pyproject.toml`.
 
 ## Quickstart
 
