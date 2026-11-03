@@ -1,0 +1,14 @@
+Senior Full-Stack Engineer
+at Northwind Labs
+Location: Karachi, Pakistan (Hybrid)
+Salary: PKR 350,000 - 500,000 per month
+
+We are hiring a senior full-stack engineer to own our internal tooling.
+
+Requirements:
+- 4+ years with React, TypeScript and Node.js
+- Comfortable with MongoDB or Postgres
+- Bonus: Docker, LangChain, OpenAI APIs
+
+Apply by 2026-12-15 at https://northwind.example/careers/fe-senior
+or email hiring@northwind.example
