@@ -177,6 +177,50 @@ def parse_heuristic(text: str, today: date | None = None) -> JobPosting:
     return posting
 
 
+FASTROUTER_BASE = "https://api.fastrouter.ai/api/v1"
+OPENAI_BASE = "https://api.openai.com/v1"
+GITHUB_TOKEN_PREFIXES = ("ghp_", "gho_", "ghs_", "ghu_", "github_pat_")
+
+
+@dataclass
+class LLMConfig:
+    """Where the optional extractor calls out to, resolved from the environment."""
+
+    api_key: str
+    base_url: str
+    model: str
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.api_key)
+
+
+def resolve_llm_config(env: dict[str, str] | None = None) -> LLMConfig:
+    """Pick key, base URL and model from the environment.
+
+    A GitHub-shaped token is never used as an API key: it usually means the wrong
+    variable got exported, and failing closed back to the heuristics is safer than
+    sending a credential to the wrong host.
+    """
+    env = dict(os.environ if env is None else env)
+    key = (
+        env.get("OPENAI_API_KEY")
+        or env.get("FASTROUTER_API_KEY")
+        or env.get("JOBPILOT_API_KEY")
+        or ""
+    ).strip()
+    if key.startswith(GITHUB_TOKEN_PREFIXES):
+        key = ""
+
+    base = (env.get("OPENAI_BASE_URL") or "").strip().rstrip("/")
+    if not base:
+        base = FASTROUTER_BASE if env.get("FASTROUTER_API_KEY") else OPENAI_BASE
+
+    default_model = "openai/gpt-4o-mini" if "fastrouter" in base else "gpt-4o-mini"
+    model = (env.get("JOBPILOT_MODEL") or default_model).strip()
+    return LLMConfig(api_key=key, base_url=base, model=model)
+
+
 def _as_int(value: Any, fallback: int | None) -> int | None:
     """LLMs return numbers as strings or floats; keep only real integers."""
     if isinstance(value, bool):
@@ -199,15 +243,16 @@ SYSTEM_PROMPT = (
 
 
 def parse_with_llm(text: str, api_key: str | None = None, model: str | None = None,
-                   timeout: float = 20.0) -> JobPosting:
+                   timeout: float = 20.0, config: LLMConfig | None = None) -> JobPosting:
     """Extract via an OpenAI-compatible endpoint, falling back to the heuristics."""
-    key = api_key or os.environ.get("OPENAI_API_KEY", "")
+    cfg = config or resolve_llm_config()
+    key = (api_key or cfg.api_key).strip()
     if not key or not text.strip():
         return parse_heuristic(text)
 
-    base = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+    base = cfg.base_url
     payload = {
-        "model": model or os.environ.get("JOBPILOT_MODEL", "gpt-4o-mini"),
+        "model": model or cfg.model,
         "temperature": 0,
         "response_format": {"type": "json_object"},
         "messages": [

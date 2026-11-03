@@ -45,7 +45,7 @@ point at it.
      raw text
         |
         v
-  +-------------+     no key / error      +-------------+
+  +-------------+   no key / API error    +-------------+
   |  extract.py | ----------------------> | heuristic   |
   |  parse_*()  |                         | regex pass  |
   +-------------+ <---------------------- +-------------+
@@ -86,14 +86,27 @@ jobpilot serve --port 8000      # http://127.0.0.1:8000/docs
 Off by default. Set a key and pass `--llm`:
 
 ```bash
-cp .env.example .env            # add OPENAI_API_KEY
+cp .env.example .env
+export FASTROUTER_API_KEY=...        # or OPENAI_API_KEY
 jobpilot add posting.txt --llm
 ```
 
-Any OpenAI-compatible endpoint works: set `OPENAI_BASE_URL` for Azure, Groq,
-OpenRouter or a local Ollama server. If the call fails or the model returns
-something unusable, the heuristic parser handles the posting instead. No keys are
-committed to this repo.
+Any OpenAI-compatible endpoint works. `resolve_llm_config()` picks the target from
+the environment:
+
+| Variable | Effect |
+| :--- | :--- |
+| `FASTROUTER_API_KEY` | key + `https://api.fastrouter.ai/api/v1`, model defaults to `openai/gpt-4o-mini` |
+| `OPENAI_API_KEY` | key + `https://api.openai.com/v1`, model defaults to `gpt-4o-mini` |
+| `OPENAI_BASE_URL` | overrides the base URL (Azure, Groq, Ollama, a local gateway) |
+| `JOBPILOT_MODEL` | overrides the model id |
+
+FastRouter namespaces its model ids (`openai/gpt-4o-mini`,
+`anthropic/claude-haiku-5.5`), which is why the default flips when that key is
+present. A token shaped like a GitHub token (`ghp_...`) is refused outright rather
+than sent to a model provider. If the call fails or the model returns something
+unusable, the heuristic parser handles the posting instead. No keys are committed
+to this repo.
 
 ## API
 
@@ -110,7 +123,7 @@ Statuses: `applied`, `screening`, `interview`, `offer`, `rejected`, `ghosted`.
 ## Tests
 
 ```bash
-pytest        # 18 tests, no network, no keys
+pytest        # 24 tests, no network, no keys
 ruff check .
 ```
 
